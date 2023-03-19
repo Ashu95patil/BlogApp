@@ -6,6 +6,8 @@ import com.codewithAshu.blog.payloads.UserDto;
 import com.codewithAshu.blog.payloads.UserResponse;
 
 public interface UserService {
+	
+	UserDto registerNewUser(UserDto userDto);
 
 	UserDto createUser(UserDto user);
 

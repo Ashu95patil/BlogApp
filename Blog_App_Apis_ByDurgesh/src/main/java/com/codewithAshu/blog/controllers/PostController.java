@@ -1,10 +1,10 @@
 package com.codewithAshu.blog.controllers;
 
 import java.io.IOException;
+
 import java.io.InputStream;
 import java.util.List;
 
-import javax.print.event.PrintJobAttributeEvent;
 import javax.servlet.http.HttpServletResponse;
 
 import org.hibernate.engine.jdbc.StreamUtils;
@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.codewithAshu.blog.config.AppConstants;
-import com.codewithAshu.blog.entity.Post;
 import com.codewithAshu.blog.payloads.ApiResponse;
 import com.codewithAshu.blog.payloads.PostDto;
 import com.codewithAshu.blog.payloads.PostResponse;

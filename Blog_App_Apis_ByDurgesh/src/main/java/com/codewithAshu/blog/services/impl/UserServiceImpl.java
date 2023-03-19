@@ -2,11 +2,9 @@ package com.codewithAshu.blog.services.impl;
 
 import java.util.List;
 
-
-
-
 import java.util.stream.Collectors;
 
+import javax.annotation.security.RolesAllowed;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -16,51 +14,54 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.codewithAshu.blog.exceptions.*;
 import com.codewithAshu.blog.config.AppConstants;
+import com.codewithAshu.blog.entity.Role;
 import com.codewithAshu.blog.entity.User;
 import com.codewithAshu.blog.payloads.UserDto;
 import com.codewithAshu.blog.payloads.UserResponse;
+import com.codewithAshu.blog.repositories.RoleRepo;
 import com.codewithAshu.blog.repositories.UserRepo;
 import com.codewithAshu.blog.services.UserService;
 
-
-
 /**
- * @implNote this class we created the multiple method for creating ,updating ,getting the
- * data through the dao class.
+ * @implNote this class we created the multiple method for creating ,updating
+ *           ,getting the data through the dao class.
  *
- * @author  Ashwini patil
+ * @author Ashwini patil
  * @see create user
  * @see update user
  * @see delete user
  * @see getall user
- * @see getsingle user
- * @
+ * @see getsingle user @
  *
  */
-
 
 @Service
 public class UserServiceImpl implements UserService {
 
 	Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
-	
+
 	@Autowired
 	private UserRepo userRepo;
 
 	@Autowired
 	private ModelMapper modelMapper;
-	
-	
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private RoleRepo roleRepo;
 
 	/**
-	 *   Saves a User entity in repo 
-	 
+	 * Saves a User entity in repo
+	 * 
 	 * @param UserDto it takes the parameter from UserDto
 	 * @return UserDto return to controller class saved the user in database.
-	 * @param <UserDto>  takes the saved User data as a parameter
+	 * @param <UserDto> takes the saved User data as a parameter
 	 * 
 	 */
 
@@ -77,17 +78,17 @@ public class UserServiceImpl implements UserService {
 
 		return this.userToDto(savedUser);
 	}
-	
-	
+
 	/**
-	 *   find id in repo and update a User entity  and save in repo 
-	 
+	 * find id in repo and update a User entity and save in repo
+	 * 
 	 * @param UserDto it takes the parameter from UserDto
-	 * @param userId takes the parameter as Integer userId
+	 * @param userId  takes the parameter as Integer userId
 	 * @return UserDto find id from repo and return the controller
 	 * @return UserDto updated id saved the repo and return the controller
-	 * @param <UserDto>  takes the updated User data as a parameter
-	 * @throws ResourceNotFoundException when the id not found then throw the exception
+	 * @param <UserDto> takes the updated User data as a parameter
+	 * @throws ResourceNotFoundException when the id not found then throw the
+	 *                                   exception
 	 * 
 	 */
 
@@ -115,25 +116,22 @@ public class UserServiceImpl implements UserService {
 		return userToDto;
 	}
 
-	
 	// getsengle user
-	
+
 	/**
-	 *   find id in repo and return the id to controller
-	 
+	 * find id in repo and return the id to controller
+	 * 
 	 * @param userId takes the parameter as Integer userId
 	 * @return UserDto find id from repo and return the controller
-	 * @throws ResourceNotFoundException when the id not found then throw the exception
+	 * @throws ResourceNotFoundException when the id not found then throw the
+	 *                                   exception
 	 * 
 	 */
 
-	
-
 	@Override
 	public UserDto getUserById(Integer userId) {
-		
-		logger.info("Initiating Dao call for getById user");
 
+		logger.info("Initiating Dao call for getById user");
 
 		User user = this.userRepo.findById(userId)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER, AppConstants.USER_ID, userId));
@@ -144,44 +142,41 @@ public class UserServiceImpl implements UserService {
 	}
 
 	// getall user
-	
+
 	/**
-	 *   return all Users entity to controller 
-	 
+	 * return all Users entity to controller
+	 * 
 	 * @param userId takes the parameter as Integer userId
 	 * @return UserDto return to controller class saved the user in database.
-	 * @param <UserDto>  takes the saved User data as a parameter
+	 * @param <UserDto> takes the saved User data as a parameter
 	 * 
 	 */
 
-
 	@Override
-	public UserResponse getAllUser(Integer PageNumber,Integer pageSize,String sortBy,String sortDir) {
-		
-		
+	public UserResponse getAllUser(Integer PageNumber, Integer pageSize, String sortBy, String sortDir) {
 
 		logger.info("Initiating Dao call for getall user");
-		
+
 		Sort sort = (sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
 
-		
-		 Pageable page = PageRequest.of(PageNumber, pageSize,sort);
+		Pageable page = PageRequest.of(PageNumber, pageSize, sort);
 
-		 Page<User> pageuser = this.userRepo.findAll(page);
-		 
-		 List<User> alluser = pageuser.getContent();
-		 
-		List<UserDto> userDtos = alluser.stream().map((user) -> this.modelMapper.map(user,UserDto.class)).collect(Collectors.toList());
+		Page<User> pageuser = this.userRepo.findAll(page);
+
+		List<User> alluser = pageuser.getContent();
+
+		List<UserDto> userDtos = alluser.stream().map((user) -> this.modelMapper.map(user, UserDto.class))
+				.collect(Collectors.toList());
 
 		UserResponse userResponse = new UserResponse();
-		
+
 		userResponse.setContent(userDtos);
 		userResponse.setPageNumber(pageuser.getNumber());
 		userResponse.setPageSize(pageuser.getSize());
 		userResponse.setTotalElement(pageuser.getTotalElements());
 		userResponse.setTotalPage(pageuser.getTotalPages());
 		userResponse.setLastPage(pageuser.isLast());
-		
+
 		logger.info("Completed Dao call for getall user");
 
 		return userResponse;
@@ -230,6 +225,26 @@ public class UserServiceImpl implements UserService {
 //		userDto.setPassword(user.getPassword());
 
 		return userDto;
+	}
+
+	@Override
+	public UserDto registerNewUser(UserDto userDto) {
+
+		// We care to roles 1. password 2. roles
+
+		User user = this.modelMapper.map(userDto, User.class);
+
+		// we have encoded the password
+		user.setPassword(this.passwordEncoder.encode(user.getPassword()));
+
+		// roles
+		Role role = this.roleRepo.findById(AppConstants.NORMAL_USER).get();
+
+		user.getRoles().add(role);
+
+		User newUser = this.userRepo.save(user);
+
+		return this.modelMapper.map(newUser, UserDto.class);
 	}
 
 }
